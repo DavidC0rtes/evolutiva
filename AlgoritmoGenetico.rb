@@ -53,7 +53,13 @@ class AlgoritmoGenetico
 		cromosoma.aptitud = sum
 	
 		if (cromosoma.aptitud == 0)
-			puts cromosoma.getGenes()
+			puts "Solución propuesta: #{cromosoma.getGenes()}"
+			puts "Cuando se multiplica la solución propuesta con la matriz A, el resultado es: #{resultado}"
+			puts ''
+
+			puts "Solución real: #{@matriz_sol}"
+			puts "El resultado debe dar #{@matriz_B}"
+
 			abort('Solución encontrada')
 		end
 	end

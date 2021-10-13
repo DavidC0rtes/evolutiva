@@ -7,7 +7,7 @@ require_relative 'AlgoritmoGenetico'
 def run(tamaño)
   algo = AlgoritmoGenetico.new(tamaño)
 
-  for i in(0..200) do
+  for i in(0..10000) do
     algo.medirAptitud(algo.poblacion)
     ganadores = algo.torneo(algo.poblacion, 6)
     algo.reproducir(ganadores) #Aquí mismo se hace el reemplazo
@@ -16,4 +16,4 @@ def run(tamaño)
   end
 end
 
-run(2)
+run(3)
