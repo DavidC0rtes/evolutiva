@@ -8,16 +8,16 @@ require_relative 'Fenotipo'
 
 class AlgoritmoGenetico
 
-	attr_reader :poblacion
+	attr_accessor :poblacion
 
-  def initialize(tamaño, metodo='error cuadratico')
+  def initialize(tamaño, metodo='error cuadratico', n=100)
     @tamaño = tamaño
     
 	  @fenotipo = Fenotipo.new(@tamaño)
 
 	  @matriz_A, @matriz_B, @matriz_sol = @fenotipo.getMatrices()
     
-	  @poblacion = ini_Poblacion(100)
+	  @poblacion = ini_Poblacion(n)
 
     @mediaPoblacional = nil
 
@@ -167,22 +167,29 @@ class AlgoritmoGenetico
 
   # uniform crossover
   def reproducir(pool)
+    poblacionNueva = []
+
 	  for i in (0...pool.length).step(2) do
 		  padre = pool[i].genes
 		  madre = pool[i+1].genes
-		  hijo1 = []
-		  hijo2 = []
+      # Se inicializan los hijos a instancias
+      # de la clase Cromosoma, inicialmente
+      # no importa que se le asignen genes.
+		  hijo1 = Cromosoma.new(@tamaño)
+		  hijo2 = Cromosoma.new(@tamaño)
 		
 		  for k in (0...@tamaño) do
 			  genes = [padre[k], madre[k]]
-			  hijo1[k] = genes[rand(0..1)]
-			  hijo2[k] = genes[rand(0..1)]
+			  hijo1.genes[k] = genes[rand(0..1)]
+			  hijo2.genes[k] = genes[rand(0..1)]
 		  end
 
 		  # Reemplaza padres por hijos
-		  pool[i] = hijo1
-		  pool[i+1] = hijo2
+		  poblacionNueva[i] = hijo1
+		  poblacionNueva[i+1] = hijo2
 	  end
+
+    return poblacionNueva # Pongo esto para el escenario de cucumber
   end
 
   def mutar(pool)
@@ -194,4 +201,10 @@ class AlgoritmoGenetico
 	  end
   end
 
+  def replace(poblacionNueva)
+    @poblacion = poblacionNueva
+  end
 end
+
+#algo = AlgoritmoGenetico.new(2, 'error_cuadratico', 2)
+#algo.poblacion.each{ |cromo| puts cromo.getGenes()}

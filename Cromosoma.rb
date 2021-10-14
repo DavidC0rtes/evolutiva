@@ -4,8 +4,7 @@ require_relative('Gen')
 
 class Cromosoma
 
-  attr_accessor :aptitud
-  attr_reader :genes
+  attr_accessor :aptitud, :genes
 
   def initialize(tamaño)
     @tamaño = tamaño
@@ -42,6 +41,3 @@ class Cromosoma
   end
   
 end
-
-#cromo = Cromosoma.new(5)
-#puts cromo.getGenes()

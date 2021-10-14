@@ -11,10 +11,13 @@ Característica: Verificar mutación, cruce uniforme, selección por torneo y un
     Escenario: Se lleva a cabo un cruce uniforme
         Dado que hay una población de 2 cromosomas
         Cuando se cruzan uniformemente
-        Entonces se generan 2 hijos nuevos
-
+        Entonces se generan 2 hijos nuevos que reemplazan a sus padres
 
     Escenario: Ocurre selección por torneo
         Dado que hay una población de 10 cromosomas
         Cuando se seleccionan los mejores
-        Entonces el mating pool tiene tamaño k<=10
+        Entonces el mating pool tiene tamaño k<10
+
+    Escenario: Se crea un sistema de ecuaciones 2x2 correcto
+        Dado que existe un sistema de ecuaciones 2x2
+        Entonces el sistema tiene solución

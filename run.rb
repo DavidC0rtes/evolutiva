@@ -15,7 +15,9 @@ def run(tamaño, metodo)
         break
       else 
         ganadores = algo.torneo(algo.poblacion, 80)
-        algo.reproducir(ganadores) #Aquí mismo se hace el reemplazo
+        nuevos = algo.reproducir(ganadores)
+        algo.replace(nuevos)
+        #algo.poblacion = nuevos # Reemplazo
         algo.mutar(algo.poblacion) # Mutar hijos
       end
     end

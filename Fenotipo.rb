@@ -40,6 +40,17 @@ class Fenotipo
     return matrixA * vectorC
   end
   
+  # Función auxiliar para ayudar con el escenario 4
+  # devuelve x = A^(-1)*B en forma de arreglo tradicional
+  def checkSol(m1, m2)
+    result = Matrix[*m1].inverse * m2
+    arr = []
+    result.each_with_index{ |v,i| 
+      arr[i] = v
+    }
+    return arr
+  end
+  
 end
 
 #feno = Fenotipo.new(4)
