@@ -9,7 +9,7 @@ def run(tamaño, metodo, generaciones)
   time = Benchmark.measure {
     algo = AlgoritmoGenetico.new(tamaño, metodo)
     sol = nil  
-    for i in(0..100) do
+    for i in(0..generaciones) do
       sol = algo.medirAptitud(algo.poblacion, metodo)
       if (sol != nil)
         break
@@ -28,9 +28,6 @@ def run(tamaño, metodo, generaciones)
     end
   }
   puts "El tiempo de ejecuión fue de #{time.real}(s)"
-
-  
-
 end
 
 puts "¿De qué dimensión desea que sea la matriz?"
