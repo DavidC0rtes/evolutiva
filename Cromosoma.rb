@@ -9,7 +9,7 @@ class Cromosoma
   def initialize(tamaño)
     @tamaño = tamaño
     @genes = Array.new(tamaño) { Gen.new() }
-    @aptitud = nil
+    @aptitud = -999999
     #ini_Cromosoma(tamaño)
   end
 

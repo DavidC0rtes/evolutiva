@@ -2,13 +2,16 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'matrix'
+require 'set'
 
 require_relative 'Cromosoma'
 require_relative 'Fenotipo'
+require_relative 'Diversidad'
 
 class AlgoritmoGenetico
 
 	attr_accessor :poblacion
+  attr_reader :bestCromosome
 
   def initialize(tamaño, metodo='error cuadratico', n=100)
     @tamaño = tamaño
@@ -19,7 +22,11 @@ class AlgoritmoGenetico
     
 	  @poblacion = ini_Poblacion(n)
 
-    @mediaPoblacional = nil
+    @bestCromosome = @poblacion[rand(0...n)]
+
+    if (metodo != 'error cuadratico')
+      @diversidad = Diversidad.new
+    end
 
   end
   
@@ -34,41 +41,32 @@ class AlgoritmoGenetico
     if (metodo == 'error cuadratico')
       toReturn = errorCuadratico(pool)
     elsif (metodo == 'diversidad')
-      @mediaPoblacional = calcularMediaPoblacional(pool)
       toReturn = diversidad(pool)
+    elsif (metodo == 'combinado')
+      toReturn = combinado(pool)
     end
 
-    return toReturn
+    toReturn
   end
 
   def diversidad(pool)
     solution = nil
-    interesantes = []
-    for cromosoma in pool do
-      valores = cromosoma.getGenes()
-      sum = 0
-      valores.each{ |x| sum += x}
-      media = sum / @tamaño
-
-      cromosoma.aptitud = (media - @mediaPoblacional).abs
-
-      #puts "media poblacional es #{@mediaPoblacional}, la media del cromosoma es #{media}"
-
-      if (cromosoma.aptitud >= 10)
-        interesantes << cromosoma 
-      end
-    end
-    # Se revisan los candidatos interesantes
-    # a ver si alguno es solución
+    interesantes = @diversidad.calcularDiversidad(pool)
+   
+    # Se revisan los candidatos interesantes a ver si alguno es solución
     for candidato in interesantes do
       solution = checkSolution(candidato)
+
+      if (candidato.aptitud > @bestCromosome.aptitud)
+        @bestCromosome = candidato
+      end
+
       if (solution != nil)
         break
       end
     end
 
-    return solution
-
+    solution
   end
 
 
@@ -86,25 +84,42 @@ class AlgoritmoGenetico
         puts "El resultado debe dar #{@matriz_B}"
   
         return valores
+        #exit
     end
     return nil
   end
 
-  def calcularMediaPoblacional(pool)
-    acumm = 0
-
-    for cromosoma in pool do
-      val = cromosoma.getGenes()
-      val.each{ |x| acumm += x }
-    end
-
-    return acumm / pool.length
-  end
-
-
   # Calculo de aptitud usando error cuadrático
   def errorCuadratico(pool)
+    solution = nil
     for cromosoma in pool do
+  
+      cromosoma.aptitud, resultado = getErrorIndividual(cromosoma)
+    
+      if (cromosoma.aptitud > @bestCromosome.aptitud)
+        @bestCromosome = cromosoma
+      end
+
+      if (cromosoma.aptitud == 0)
+        valores = cromosoma.getGenes()
+        puts "Solución propuesta: #{valores}"
+        puts "Cuando se multiplica la solución propuesta con la matriz A, el resultado es: #{resultado}"
+        puts ''
+  
+        puts "Solución real: #{@matriz_sol}"
+        puts "El resultado debe dar #{@matriz_B}"
+  
+        solution = valores
+        break
+      end
+    end
+    
+    return solution
+  end
+
+  # Calcula que tan alejado esta un cromosoma individual
+  # de la respuesta. Metodo de ayuda a errorCuadratico()
+  def getErrorIndividual(cromosoma)
       valores = cromosoma.getGenes()
       resultado = Matrix[*@fenotipo.matriz_A] * Matrix.column_vector(valores)
       
@@ -114,26 +129,47 @@ class AlgoritmoGenetico
         restaArr[index] = -val**2
       }
   
-      sum = 0
-      # No usé array.sum() porque la versión de ruby que tengo no tiene ese metodo
-      #puts restaArr
-      restaArr.each { |a| sum += a } 
-  
-      cromosoma.aptitud = sum
+      sum = restaArr.sum()
+      return sum, resultado
+  end
+
+
+  # Se divide la población en 2 aleatoriamente, generando una "bolsa" con
+  # todos los posibles indices, se van sacando numeros de la bolsa al azar
+  # hasta que ya no queden más indices. Se utiliza la clase Set de ruby.
+  def combinado(pool)
+
+    indices = Set[*(0...pool.length)]
+
+    lista1 = randn(pool.length/2, pool.length)
+    lista2 = indices - lista1
     
-      if (cromosoma.aptitud == 0)
-        puts "Solución propuesta: #{valores}"
-        puts "Cuando se multiplica la solución propuesta con la matriz A, el resultado es: #{resultado}"
-        puts ''
-  
-        puts "Solución real: #{@matriz_sol}"
-        puts "El resultado debe dar #{@matriz_B}"
-  
-        return valores
-      end
+    pool1 = pool2 = []
+    for i in lista1 do
+      pool1.push( pool[i] ) 
     end
-    
-    return nil
+
+    for i in lista2 do
+      pool2.push( pool[i] )
+    end
+
+    sol1 = errorCuadratico(pool1)
+    sol2 = diversidad(pool2)
+
+    if (sol1 != nil)
+      return sol1
+    elsif (sol2 != nil)
+      return sol2
+    end
+  end
+
+
+  def randn(n, max)
+    randoms = Set.new
+    loop do
+        randoms << rand(max)
+        return randoms if randoms.size >= n
+    end
   end
 
   # Selección por torneo
@@ -149,8 +185,13 @@ class AlgoritmoGenetico
 
 		  candidato1 = pool[num1]
 		  candidato2 = pool[num2]
-		  #puts candidato1.aptitud
 		
+      if (candidato1.aptitud == nil || candidato2.aptitud == nil)
+        puts candidato1.inspect
+        puts candidato2.inspect
+        abort('error aptitud nula')
+      end
+
 		  if (candidato1.aptitud > candidato2.aptitud)
 			  ganadores[i] = candidato1
 		  elsif(candidato2.aptitud > candidato1.aptitud)
@@ -204,6 +245,8 @@ class AlgoritmoGenetico
   def replace(poblacionNueva)
     @poblacion = poblacionNueva
   end
+
+
 end
 
 #algo = AlgoritmoGenetico.new(2, 'error_cuadratico', 2)
